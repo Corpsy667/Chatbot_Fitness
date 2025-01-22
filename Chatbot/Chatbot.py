@@ -2,6 +2,7 @@ import random
 import pandas as pd
 
 # Load the dataset
+print("cc")
 data = pd.read_csv('megaGymDataset.csv')
 
 def recommend_workout(preferences):
@@ -12,13 +13,13 @@ def recommend_workout(preferences):
     """
     filtered_data = data
     for key, value in preferences.items():
-        if value:
+        if value and value.lower() != "any":
             filtered_data = filtered_data[filtered_data[key].str.contains(value, case=False, na=False)]
     
     if filtered_data.empty:
         return ["Sorry, no workouts match your preferences. Try adjusting them!"]
     
-    return filtered_data['Title'].tolist()[:5]  # Return the top 5 recommendations
+    return filtered_data['Title'].sample(n=min(5, len(filtered_data))).tolist()  # Return up to 5 random recommendations
 
 def chatbot():
     # Basic responses for the chatbot
@@ -41,10 +42,10 @@ def chatbot():
         elif "workout" in user_input:
             print("Great! Let's find a workout for you. Please answer a few questions.")
             
-            workout_type = input("What type of workout? (e.g., Strength, Cardio): ").strip()
-            body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs): ").strip()
-            equipment = input("Any specific equipment? (e.g., Bands, None): ").strip()
-            level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced): ").strip()
+            workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
+            body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs, or Any): ").strip()
+            equipment = input("Any specific equipment? (e.g., Bands, None, or Any): ").strip()
+            level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced, or Any): ").strip()
             
             preferences = {
                 'Type': workout_type,
