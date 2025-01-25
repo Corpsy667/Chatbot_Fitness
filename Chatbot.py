@@ -2,8 +2,8 @@ import random
 import pandas as pd
 
 # Load the dataset
-print("cc")
-data = pd.read_csv('megaGymDataset.csv')
+data = pd.read_csv('megaGymDataset.csv', index_col=0)
+data = data.drop(columns=["Rating", "RatingDesc"])
 
 def recommend_workout(preferences):
     """
@@ -43,10 +43,22 @@ def chatbot():
             print("Great! Let's find a workout for you. Please answer a few questions.")
             
             workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
+            while workout_type.lower() not in data["Type"].unique().lower():
+                print("please enter a valid workout type such as : Strength, Plyometrics, Cardio, Stretching, Powerlifting, Strongman, Olympic Weightlifting, any")
+                workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
             body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs, or Any): ").strip()
+            while body_part.lower() not in data["BodyPart"].unique().lower():
+                print("please enter a valid body part such as : Abdominals, Legs, Chest, Back, Shoulders, Arms, Full Body, any")
+                body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs, or Any): ").strip()
             equipment = input("Any specific equipment? (e.g., Bands, None, or Any): ").strip()
+            while equipment.lower() not in data["Equipment"].unique().lower():
+                print("please enter a valid equipment such as : Bands, Dumbbells, Barbell, Kettlebell, None, Any")
+                equipment = input("Any specific equipment? (e.g., Bands, None, or Any): ").strip()
             level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced, or Any): ").strip()
-            
+            while level.lower() not in data["Level"].unique().lower():
+                print("please enter a valid difficulty level such as : Beginner, Intermediate, Advanced, Any")
+                level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced, or Any): ").strip()
+                
             preferences = {
                 'Type': workout_type,
                 'BodyPart': body_part,
