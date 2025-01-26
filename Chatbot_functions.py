@@ -1,5 +1,6 @@
 import random
 import pandas as pd
+from youtube_functions import search_youtube_video
 
 # Load the dataset
 data = pd.read_csv('megaGymDataset.csv', index_col=0)
@@ -26,20 +27,12 @@ def chatbot():
     greetings = ["Hi there!", "Hello!", "Hey! How can I help you today?", "Greetings! Ready to talk fitness?"]
     thanks_responses = ["You're welcome!", "No problem!", "Anytime!", "Happy to help!"]
     goodbye_responses = ["Goodbye!", "See you later!", "Take care!", "Have a great day!"]
-
+    video_responses = ["Here's a video for you!", "Check out this video!", "Watch this video for more information!", "Here's a small video for you!"]
     # Main loop to interact with the user
     print(random.choice(greetings))
     while True:
         user_input = input("You: ").lower()
-
-        if any(keyword in user_input for keyword in ["hi", "hello", "hey"]):
-            print(random.choice(greetings))
-        elif "thank" in user_input:
-            print(random.choice(thanks_responses))
-        elif any(keyword in user_input for keyword in ["bye", "goodbye", "see you"]):
-            print(random.choice(goodbye_responses))
-            break
-        elif "workout" in user_input:
+        if "workout" in user_input:
             print("Great! Let's find a workout for you. Please answer a few questions.")
             
             workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
@@ -69,9 +62,20 @@ def chatbot():
             recommendations = recommend_workout(preferences)
             print("Here are some recommendations:")
             for workout in recommendations:
-                print(f"- {workout}")
+                title, url = search_youtube_video(workout)
+                if title and url:
+                    print(f"- {workout}\n{random.choice(video_responses)}: {url}")
+                else:
+                    print(f"- {workout}, sorry i couldn't find a video for this workout")
+        elif any(keyword in user_input for keyword in ["hi", "hello", "hey", ]):
+            print(random.choice(greetings))
+        elif "thank" in user_input:
+            print(random.choice(thanks_responses))
+        elif any(keyword in user_input for keyword in ["bye", "goodbye", "see you"]):
+            print(random.choice(goodbye_responses))
+            break
         else:
             print("I'm not sure I understand. Can you tell me more?")
-
+        
 if __name__ == "__main__":
     chatbot()
