@@ -1,7 +1,8 @@
 import random
 import pandas as pd
 from youtube_functions import search_youtube_video
-
+import re
+import streamlit as st
 # Load the dataset
 data = pd.read_csv('megaGymDataset.csv', index_col=0)
 data = data.drop(columns=["Rating", "RatingDesc"])
@@ -32,61 +33,107 @@ keywords_dict = {
     'weather': [r'\b(weather|forecast)(?: in (?P<city>\w+))?(?: for (?P<time>today|tomorrow))?\b'],
     'unknown': [r'.*\?\b.*|.*\bhmm\b.*|.*\bno idea\b.*']
 }
+def matchPattern(user_msg):
+    user_msg = user_msg.lower()
+    for intent, patterns in keywords_dict.items():
+        for pattern in patterns:
+            match = re.search(pattern, user_msg)
+            if match:
+                return intent
+    return 'unknown'
 
-def chatbot():
-    # Basic responses for the chatbot
-    greetings_responses = ["Hi there!", "Hello!", "Hey! How can I help you today?", "Greetings! Ready to talk fitness?", 'Welcome here', 'Hiii...I am a Bot, how are you?', 'Hey there!', 'Hello!', 'Hi!', 'Hey!', 'Howdy!', 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExemw5NWtqN3NhMzVzeHp4cHYxazJ6NXQ0aWk5cWhiMDI5NWMxaGZqNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ASd0Ukj0y3qMM/giphy.gif', 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMThiNDgzaW90dnlpcTFpNzF0MXA5cm4wYmV3bDB3d2wwMTk0aXc2MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Cmr1OMJ2FN0B2/giphy.gif']
-    thanks_responses = ["You're welcome!", "No problem!", "Anytime!", "Happy to help!"]
+def chatbot(user_input):
+    greetings_responses = ["Hi there!", "Hello!", "Hey! How can I help you today?", "Greetings! Ready to talk fitness?", "Welcome here!", "Hiii... I am a Bot, how are you?", "Hey there!", "Howdy!"]
+    thanks_responses = ["You're welcome!", "No problem!", "Anytime!", "Happy to help!", "You're welcome! Let me know if you need anything else!"]
     goodbye_responses = ["Goodbye!", "See you later!", "Take care!", "Have a great day!"]
-    video_responses = ["Here's a video for you!", "Check out this video!", "Watch this video for more information!", "Here's a small video for you!"]
-    # Main loop to interact with the user
-    print(random.choice(greetings_responses))
-    while True:
-        user_input = input("You: ").lower()
-        if "workout" in user_input or "exercise" in user_input or "fitness" in user_input or "gym" in user_input or "training" in user_input or "routine" in user_input:
-            print("Great! Let's find a workout for you. Please answer a few questions.")
-            
-            workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
-            while workout_type.lower() not in data["Type"].unique().lower():
-                print("please enter a valid workout type such as : Strength, Plyometrics, Cardio, Stretching, Powerlifting, Strongman, Olympic Weightlifting, any")
-                workout_type = input("What type of workout? (e.g., Strength, Cardio, or Any): ").strip()
-            body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs, or Any): ").strip()
-            while body_part.lower() not in data["BodyPart"].unique().lower():
-                print("please enter a valid body part such as : Abdominals, Legs, Chest, Back, Shoulders, Arms, Full Body, any")
-                body_part = input("Which body part do you want to target? (e.g., Abdominals, Legs, or Any): ").strip()
-            equipment = input("Any specific equipment? (e.g., Bands, None, or Any): ").strip()
-            while equipment.lower() not in data["Equipment"].unique().lower():
-                print("please enter a valid equipment such as : Bands, Dumbbells, Barbell, Kettlebell, None, Any")
-                equipment = input("Any specific equipment? (e.g., Bands, None, or Any): ").strip()
-            level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced, or Any): ").strip()
-            while level.lower() not in data["Level"].unique().lower():
-                print("please enter a valid difficulty level such as : Beginner, Intermediate, Advanced, Any")
-                level = input("What difficulty level? (e.g., Beginner, Intermediate, Advanced, or Any): ").strip()
-                
-            preferences = {
-                'Type': workout_type,
-                'BodyPart': body_part,
-                'Equipment': equipment,
-                'Level': level
-            }
-            
-            recommendations = recommend_workout(preferences)
-            print("Here are some recommendations:")
-            for workout in recommendations:
-                title, url = search_youtube_video(workout)
-                if title and url:
-                    print(f"- {workout}\n{random.choice(video_responses)}: {url}")
-                else:
-                    print(f"- {workout}, sorry i couldn't find a video for this workout")
-        elif any(keyword in user_input for keyword in keywords_dict['greeting']):
-            print(random.choice(greetings_responses))
-        elif "thank" in user_input or user_input in keywords_dict['thanks']:
-            print(random.choice(thanks_responses))
-        elif any(keyword in user_input for keyword in keywords_dict['bye']):
-            print(random.choice(goodbye_responses))
-            break
+    video_responses = ["Here's a video for you!", "Check out this video!", "Watch this video for more information!"]
+
+def chatbot(user_input):
+    greetings_responses = ["Hi there!", "Hello!", "Hey! How can I help you today?", "Greetings! Ready to talk fitness?", "Welcome here!", "Hiii... I am a Bot, how are you?", "Hey there!", "Howdy!"]
+    thanks_responses = ["You're welcome!", "No problem!", "Anytime!", "Happy to help!", "You're welcome! Let me know if you need anything else!"]
+    goodbye_responses = ["Goodbye!", "See you later!", "Take care!", "Have a great day!"]
+    video_responses = ["Here's a video for you!", "Check out this video!", "Watch this video for more information!"]
+
+    # Initialize session state variables
+    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", st.session_state)
+    if "chat_step" not in st.session_state:
+        st.session_state.chat_step = 0  # Tracks which step we're on
+        st.session_state.workout_preferences = {}  # Stores user choices
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", st.session_state)
+
+    # Step-by-step conversation flow
+    if st.session_state.chat_step == 0:
+        if any(keyword in user_input.lower() for keyword in ["workout", "exercise", "fitness"]):
+            st.session_state.chat_step += 1
+            return "Great! Let's find a workout for you. What type of workout are you looking for? (Strength, Cardio, etc.)"
+        elif any(keyword in user_input.lower() for keyword in ["hi", "hello", "hey", "greetings"]):
+            return random.choice(greetings_responses)
+        
+        elif any(keyword in user_input.lower() for keyword in ["thank", "thanks"]):
+            return random.choice(thanks_responses)
+        
+        elif any(keyword in user_input.lower() for keyword in ["bye", "goodbye", "see you", "take care"]):
+            return random.choice(goodbye_responses)
+        
         else:
-            print("I'm not sure I understand. Can you tell me more?")
+            return "I'm not sure I understand. Can you tell me more?"
+
+    elif st.session_state.chat_step == 1:
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", st.session_state)
+        user_input = st.session_state.messages[-1]["content"]
+        if user_input.title() in data["Type"].unique():
+            st.session_state.workout_preferences["Type"] = user_input.title()
+            st.session_state.chat_step += 1
+            return "Which body part do you want to target? (Abdominals, Legs, etc.)"
+        else:
+            return "Please enter a valid workout type: Strength, Cardio, Plyometrics, etc."
+
+    elif st.session_state.chat_step == 2:
+        user_input = st.session_state.messages[-1]["content"]
+        if user_input.title() in data["BodyPart"].unique():
+            st.session_state.workout_preferences["BodyPart"] = user_input.title()
+            st.session_state.chat_step += 1
+            return "Any specific equipment? (None, Dumbbells, Barbells, etc.)"
+        else:
+            return "Please enter a valid body part: Abdominals, Legs, Chest, etc."
+
+    elif st.session_state.chat_step == 3:
+        user_input = st.session_state.messages[-1]["content"]
+        if user_input.title() in data["Equipment"].unique():
+            st.session_state.workout_preferences["Equipment"] = user_input.title()
+            st.session_state.chat_step += 1
+            return "What difficulty level? (Beginner, Intermediate, Advanced, Any)"
+        else:
+            return "Please enter a valid equipment type: None, Dumbbells, Barbells, etc."
+
+    elif st.session_state.chat_step == 4:
+        user_input = st.session_state.messages[-1]["content"]
+        if user_input.title() in data["Level"].unique():
+            st.session_state.workout_preferences["Level"] = user_input.title()
+            st.session_state.chat_step += 1
+
+            # Now that we have all inputs, generate recommendations
+            preferences = st.session_state.workout_preferences
+            recommendations = recommend_workout(preferences)
+
+            response = "Here are some recommended workouts:\n"
+            for workout in recommendations:
+                title, url = "test", "abc" #search_youtube_video(workout)
+                if title and url:
+                    response += f"- {workout}\nHere's a video: {url}\n"
+                else:
+                    response += f"- {workout}, but no video found.\n"
+
+            # Reset state after providing recommendations
+            st.session_state.chat_step = 0
+            st.session_state.workout_preferences = {}
+
+            return response
+
+        else:
+            return "Please enter a valid difficulty level: Beginner, Intermediate, Advanced, Any."
+
+
         
 if __name__ == "__main__":
     chatbot()
