@@ -142,7 +142,6 @@ def chatbot(user_input):
             # Reset state after providing recommendations
             st.session_state.chat_step = 0
             st.session_state.workout_preferences = {}
-            response += {random.choice(responses_dict["video"])}
             return response, url_list
 
         else:
